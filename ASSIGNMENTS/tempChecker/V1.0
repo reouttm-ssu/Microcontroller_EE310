@@ -1,0 +1,94 @@
+;-------------------------------------------------------------------------------
+; Title: Temperature Checker V. Reference
+;-------------------------------------------------------------------------------
+; Purpose: To take an input tempurature and check it against a refernece tempurature
+; Dependencies: None
+; Compiler: MPLABX pic.as
+; Author: Maxim Reoutt
+; Output(s): PORTD,1 & PORTD,2 which are meant to be connected to LEDs
+; Input(s): A reference tempurature and a measured tempurature
+; Versions:
+;    V1.0 3/8/26
+    
+#include	<xc.inc>
+    
+;-------------------------------------------------------------------------------
+;PROGRAM INPUTS
+;-------------------------------------------------------------------------------
+;DEFINE directive is used to create variables for values
+
+#define measuredTempInput	45 ; this is the measured temp
+#define refTempInput		25 ; this is the reference temp
+   
+    
+;-------------------------------------------------------------------------------
+;DEFINITIONS
+;-------------------------------------------------------------------------------
+    
+#define SWITCH	    LATD,2
+#define LED0	    PORTD,2
+#define LED1	    PORTD,1
+    
+    
+;---------------------
+; Program Constants
+;---------------------
+; The EQU (Equals) directive is used to assign a constant value to a symbolic name or label.
+; It is simpler and is typically used for straightforward assignments.
+;It directly substitutes the defined value into the code during the assembly process.
+    
+REG10   equ     10h   // in HEX
+REG11   equ     11h
+REG01   equ     1h
+contReg EQU	12h
+
+   
+ 
+ 
+ 
+    ORG		0x20
+
+;Check if measured is greater
+CHECK_GREATER:
+    MOVLW	refTempInput ; w = ref
+    CPFSGT	measuredTempInput;check
+    GOTO	CHECK_LESSER ; skip if greater
+    MOVLW	0x02
+    MOVWF	contReg ; set contReg=2
+    GOTO	LED_HOT
+    
+    
+;Check if measured is lesser
+CHECK_LESSER:
+    MOVLW	refTempInput ; w = ref
+    CPFSLT	measuredTempInput ;check
+    GOTO	NEITHER ; skip if lesser
+    MOVLW	0x01
+    MOVWF	contReg ; set contReg
+    GOTO	LED_COOL
+    
+    
+;Since equal
+NEITHER:
+    CLRF	contReg ; set contReg
+    GOTO	LED_OFF
+    
+    
+    
+
+ 
+;LED_HOT {do something or nothing}
+LED_HOT:
+    BSF		LED0 ; light PORTD,2
+    SLEEP
+    
+;LED_COOL {do something or nothing}
+LED_COOL:
+    BSF		LED1
+    SLEEP
+    
+;LED_OFF {do something or nothing}
+LED_OFF:
+    SLEEP
+    
+
