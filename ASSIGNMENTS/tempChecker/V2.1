@@ -1,0 +1,210 @@
+;-------------------------------------------------------------------------------
+; Title: Temperature Checker V. Reference
+;-------------------------------------------------------------------------------
+; Purpose: To take an input tempurature and check it against a refernece tempurature
+; Dependencies: None
+; Compiler: MPLABX pic.as
+; Author: Maxim Reoutt
+; Output(s): PORTD,1 & PORTD,2 which are meant to be connected to LEDs
+; Input(s): A reference tempurature and a measured tempurature
+; Versions:
+;   V1.0 3/8/26
+;   V1.1 3/9/26 (Actually does something)
+;   V1.2 3/10/26 (Mostly complete, needs an end loop)
+;   V2.0 3/10/26 (Final Version, Works As Intended)
+;   V2.1 3/10/26 (Actual final version, can take negative values)
+
+#include ".\myConfigFile.inc"
+#include	<xc.inc>
+    
+;-------------------------------------------------------------------------------
+;PROGRAM INPUTS
+;-------------------------------------------------------------------------------
+;DEFINE directive is used to create variables for values
+
+#define measuredTempInput	-5 ; this is the measured temp
+#define refTempInput		15 ; this is the reference temp
+   
+    
+;-------------------------------------------------------------------------------
+;DEFINITIONS
+;-------------------------------------------------------------------------------
+    
+#define SWITCH	    LATD,2
+#define LED0	    LATD,2
+#define LED1	    LATD,1
+    
+    
+;---------------------
+; Program Constants
+;---------------------
+; The EQU (Equals) directive is used to assign a constant value to a symbolic name or label.
+; It is simpler and is typically used for straightforward assignments.
+;It directly substitutes the defined value into the code during the assembly process.
+    
+REG10   equ     10h   // in HEX
+REG11   equ     11h
+REG01   equ     1h
+contReg EQU	22h
+measReg EQU	21h
+refReg	EQU	20h
+
+   
+ 
+    PSECT absdata,abs,ovrld
+ 
+    ORG		0x20
+    MOVLW	measuredTempInput
+    MOVWF	measReg,0 ; for comparison
+    BTFSS	measReg,7 ;check if measReg is negative
+    GOTO	INIT
+    COMF	measReg,1 ;complement so calculation is correct
+    INCF	measReg,1
+    
+    
+    
+INIT:
+    BCF		TRISD,1
+    BCF		TRISD,2
+
+;Check if measured is greater
+CHECK_GREATER:
+    MOVLW	refTempInput ; w = ref
+    CPFSGT	measReg;check
+    GOTO	CHECK_LESSER ; skip if greater
+    MOVLW	0x02
+    MOVWF	contReg ; set contReg=2
+    GOTO	LED_HOT
+    
+    
+;Check if measured is lesser
+CHECK_LESSER:
+    MOVLW	refTempInput ; w = ref
+    CPFSLT	measReg ;check
+    GOTO	NEITHER ; skip if lesser
+    MOVLW	0x01
+    MOVWF	contReg ; set contReg
+    GOTO	LED_COOL
+    
+    
+;Since equal
+NEITHER:
+    CLRF	contReg ; set contReg
+    GOTO	LED_OFF
+    
+    
+    
+
+ 
+;LED_HOT {set latd,2}
+LED_HOT:
+    BSF		LED0 ; light PORTD,2
+    CALL	CALC_MEAS_DEC ; perform conversions
+    CALL	CALC_REF_DEC
+    GOTO	END_LOOP
+    
+;LED_COOL {set latd,1}
+LED_COOL:
+    BSF		LED1 ; light PORTD,1
+    CALL	CALC_MEAS_DEC ; perform conversions
+    CALL	CALC_REF_DEC
+    GOTO	END_LOOP
+    
+;LED_OFF {do nothing}
+LED_OFF:
+    CALL	CALC_MEAS_DEC
+    CALL	CALC_REF_DEC
+    GOTO	END_LOOP
+    
+    
+    
+    
+END_LOOP: ; end code with infinite loop
+    NOP
+    NOP
+    GOTO	END_LOOP
+    
+    
+    
+    
+
+CALC_MEAS_DEC:
+#define	DEN	10
+tempReg EQU	2h
+measTensReg EQU	71h
+measOnesReg EQU	70h
+ 
+ 
+    MOVFF   measReg, tempReg     ; tempReg = input
+
+
+
+; if negative (bit7 set), make tempReg = abs(tempReg) and clear C
+    BTFSS   tempReg, 7           ; skip next if bit7=1 (negative)
+    GOTO    MAG_READY            ; bit7=0 => positive
+ 
+; negative case
+    COMF    tempReg, F           ; one's complement
+    INCF    tempReg, F           ; +1 => abs value
+
+MAG_READY:
+; convert tempReg (0..128) to tens/ones by repeated subtraction
+    CLRF    measTensReg
+
+DIV10_LOOP:
+    MOVLW   DEN
+    CPFSLT  tempReg              ; skip next if tempReg < 10
+    GOTO    DO_SUB10
+    GOTO    DONE_DIV10
+
+DO_SUB10:
+    MOVLW   DEN
+    SUBWF   tempReg, F           ; tempReg -= 10
+    INCF    measTensReg, F           ; tens++
+    GOTO    DIV10_LOOP
+
+DONE_DIV10:
+    MOVFF   tempReg, measOnesReg
+    RETURN
+    
+    
+CALC_REF_DEC:
+;#define	DEN	10
+;tempReg EQU	2h
+refTensReg EQU	61h
+refOnesReg EQU	60h
+    MOVLW   refTempInput
+    MOVWF   refReg
+ 
+ 
+    MOVFF   refReg, tempReg     ; tempReg = input
+
+
+
+; if negative (bit7 set), make tempReg = abs(tempReg) and clear C
+    BTFSS   tempReg, 7           ; skip next if bit7=1 (negative)
+    GOTO    MAG_READY2            ; bit7=0 => positive
+ 
+; negative case
+    COMF    tempReg, F           ; one's complement
+    INCF    tempReg, F           ; +1 => abs value
+
+MAG_READY2:
+; convert tempReg (0..128) to tens/ones by repeated subtraction
+    CLRF    refTensReg
+
+DIV10_LOOP2:
+    MOVLW   DEN
+    CPFSLT  tempReg              ; skip next if tempReg < 10
+    GOTO    DO_SUB102
+    GOTO    DONE_DIV102
+
+DO_SUB102:
+    MOVLW   DEN
+    SUBWF   tempReg, F           ; tempReg -= 10
+    INCF    refTensReg, F           ; tens++
+    GOTO    DIV10_LOOP2
+
+DONE_DIV102:
+    MOVFF   tempReg, refOnesReg
+    RETURN
