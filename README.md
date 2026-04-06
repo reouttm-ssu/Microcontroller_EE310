@@ -2,3 +2,5 @@
 My EE 310 projects and codes
 
 [Assignments](ASSIGNMENTS)
+
+[Config Files](CONFIG FILES)
