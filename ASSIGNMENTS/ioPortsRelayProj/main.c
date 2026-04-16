@@ -11,7 +11,8 @@
  * V0.1 (4/15/26)[No header files yet, and no functions, just body of main]
  * V0.2 (4/15/26)[Header files and funtions added, no emergency interrupt 
  * function yet]
- * 
+ * V1.0 (4/15/26)[code with all functions and a working emergency switch now
+ * ready for implementation to PIC and testing]
  */
 
 
@@ -121,11 +122,19 @@ unsigned char count_presses_pr1(void)
     // This variable measures how long the sensor has been inactive
     // after at least one press has happened
     unsigned int idle = 0;
-
+    
     while (1)
     {
         
 
+        //check if emergency switch is pulled
+        if(EMG_PORT == 1) {
+            __delay_ms(80);
+            if(EMG_PORT == 0){
+                return 255;
+            }
+        }
+        
         // PR1 is considered active when it becomes LOW
         // Example: hand covers sensor -> input goes low
         if (PR1_PORT == 0)
@@ -189,6 +198,14 @@ unsigned char count_presses_pr2(void)
     {
         
 
+        //check if emergency switch is pulled
+        if(EMG_PORT == 1) {
+            __delay_ms(80);
+            if(EMG_PORT == 0){
+                return 255;
+            }
+        }
+        
         // Check whether PR2 has been activated
         if (PR2_PORT == 0)
         {
@@ -259,11 +276,23 @@ void main(void) {
         //clear seven seg
         clear_display();
         
+        if(EMG_PORT == 0){
+            __delay_ms(80);
+            if(EMG_PORT == 0){
+                continue;
+            }
+        }
+        
         //take first digit from pr1
         first = count_presses_pr1();
         
         //display digit taken
         display_digit(first);
+        
+        //check if emergency switch was pulled
+        if(first == 255){
+            continue;
+        }
         
         //delay
         __delay_ms(1000);
@@ -278,6 +307,11 @@ void main(void) {
         
         //display digit taken
         display_digit(second);
+        
+        //check if emergency switch was pulled
+        if(second == 255){
+            continue;
+        }
         
         //delay
         __delay_ms(1000);
