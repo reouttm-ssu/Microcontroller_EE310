@@ -1,5 +1,5 @@
 /*
- * init file for ioPortsRelayProj V0.2
+ * init file for ioPortsRelayProj V1.0
  */
 #ifndef INIT_H
 #define INIT_H
@@ -37,6 +37,7 @@
 // These are read as DIGITAL inputs
 #define PR1_PORT      PORTBbits.RB1
 #define PR2_PORT      PORTBbits.RB2
+#define EMG_PORT      PORTBbits.RB0
 
 // TRIS bits for input pins
 #define PR1_TRIS      TRISBbits.TRISB1
