@@ -5,7 +5,9 @@
  * Purpose: To take two digit inputs from touchless photoresistor switches and 
  * if the code is correct turn on a motor. Display digit being entered on a 
  * seven segment display.
- * 
+ *
+ * Inputs: RB1 for PR1_PORT, RB2 for PR2_PORT, RB6 for CHECK_PORT, RB0 for EMG_PORT
+ * Outputs: PORTD for DISPLAY_LED, RB3 for 
  * 
  * Versions:
  * V0.1 (4/15/26)[No header files yet, and no functions, just body of main]
