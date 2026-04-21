@@ -13,6 +13,7 @@
  * function yet]
  * V1.0 (4/15/26)[code with all functions and a working emergency switch now
  * ready for implementation to PIC and testing]
+ * V1.1 (4/21/26)[code works to all specifications]
  */
 
 
@@ -62,11 +63,12 @@ void setup_pins(void)
     PR1_TRIS = 1;
     PR2_TRIS = 1;
     EMG_TRIS = 1;
+    CHECK_TRIS = 1;
 
     // Enable weak pull-ups on the input pins
-    WPUBbits.WPUB1 = 1;   // pull-up for PR1
-    WPUBbits.WPUB2 = 1;   // pull-up for PR2
-    WPUBbits.WPUB0 = 1;   // pull-up for emergency input
+    //WPUBbits.WPUB1 = 1;   // pull-up for PR1
+    //WPUBbits.WPUB2 = 1;   // pull-up for PR2
+    //WPUBbits.WPUB0 = 1;   // pull-up for emergency input
 
     // Initial output states
     SYS_LED_LAT = 1;   // System LED ON when power is on
@@ -91,7 +93,7 @@ void display_digit(unsigned char num)
 void clear_display(void)
 {
     // Turn off all segments
-    SEG_LAT = 0x00;
+    SEG_LAT = seg_num[0];
 }
 
 
@@ -100,6 +102,7 @@ void correct_code(void)
 {
     // If code is correct, turn on motor
     MOTOR_LAT = 1;
+    __delay_ms(3000);
 }
 
 
@@ -110,6 +113,20 @@ void wrong_code(void)
     BUZZER_LAT = 1;
     __delay_ms(2000);
     BUZZER_LAT = 0;
+}
+
+
+//emergency buzz
+void emergency_buzz(void)
+{
+    BUZZER_LAT = 1;
+    __delay_ms(500);
+    BUZZER_LAT = 0;
+    __delay_ms(500);
+    BUZZER_LAT = 1;
+    __delay_ms(500);
+    BUZZER_LAT = 0;
+    __delay_ms(500);
 }
 
 
@@ -130,8 +147,19 @@ unsigned char count_presses_pr1(void)
         //check if emergency switch is pulled
         if(EMG_PORT == 1) {
             __delay_ms(80);
-            if(EMG_PORT == 0){
+            if(EMG_PORT == 1){
                 return 255;
+            }
+        }
+        
+        if(CHECK_PORT == 1)
+        {
+            __delay_ms(80);
+            
+            if(CHECK_PORT == 1)
+            {
+                while(CHECK_PORT == 1);
+                return count;
             }
         }
         
@@ -148,6 +176,8 @@ unsigned char count_presses_pr1(void)
             {
                 // Count one cover
                 count++;
+                display_digit(count);
+                
 
                 // Wait until sensor becomes inactive again
                 // This prevents one long cover from being counted many times
@@ -158,29 +188,6 @@ unsigned char count_presses_pr1(void)
 
                 // Reset idle timer because activity just happened
                 idle = 0;
-            }
-        }
-        else
-        {
-            // If no press is happening now...
-            // and at least one press was already counted...
-            // begin timing the inactivity
-            if (count > 0)
-            {
-                __delay_ms(100);
-                idle += 100;
-
-                // If no new press has happened for 1.5 seconds,
-                // assume the user is done entering this digit
-                if (idle >= 1500)
-                {
-                    return count;
-                }
-            }
-            else
-            {
-                // If no presses yet, just keep waiting
-                __delay_ms(50);
             }
         }
     }
@@ -201,8 +208,19 @@ unsigned char count_presses_pr2(void)
         //check if emergency switch is pulled
         if(EMG_PORT == 1) {
             __delay_ms(80);
-            if(EMG_PORT == 0){
+            if(EMG_PORT == 1){
                 return 255;
+            }
+        }
+        
+        if(CHECK_PORT == 1)
+        {
+            __delay_ms(80);
+            
+            if(CHECK_PORT == 1)
+            {
+                while(CHECK_PORT == 1);
+                return count;
             }
         }
         
@@ -217,6 +235,7 @@ unsigned char count_presses_pr2(void)
             {
                 // Count one cover
                 count++;
+                display_digit(count);
 
                 // Wait until the sensor is released
                 while (PR2_PORT == 0);
@@ -227,28 +246,6 @@ unsigned char count_presses_pr2(void)
 
                 // Reset inactivity timer
                 idle = 0;
-            }
-        }
-        else
-        {
-            // If at least one cover already happened,
-            // measure how long sensor stays inactive
-            if (count > 0)
-            {
-                __delay_ms(100);
-                idle += 100;
-
-                // After 1.5 seconds of no activity,
-                // assume second digit is complete
-                if (idle >= 1500)
-                {
-                    return count;
-                }
-            }
-            else
-            {
-                // If no activity yet, keep waiting
-                __delay_ms(50);
             }
         }
     }
@@ -267,6 +264,9 @@ void main(void) {
     //set up pins
     setup_pins();
     
+    //display default of 0
+    
+    
     //main loop
     while(1)
     {
@@ -276,9 +276,10 @@ void main(void) {
         //clear seven seg
         clear_display();
         
-        if(EMG_PORT == 0){
+        if(EMG_PORT == 1){
             __delay_ms(80);
-            if(EMG_PORT == 0){
+            if(EMG_PORT == 1){
+                emergency_buzz();
                 continue;
             }
         }
@@ -291,6 +292,7 @@ void main(void) {
         
         //check if emergency switch was pulled
         if(first == 255){
+            emergency_buzz();
             continue;
         }
         
@@ -310,6 +312,7 @@ void main(void) {
         
         //check if emergency switch was pulled
         if(second == 255){
+            emergency_buzz();
             continue;
         }
         
@@ -334,4 +337,3 @@ void main(void) {
     
     return;
 }
-
