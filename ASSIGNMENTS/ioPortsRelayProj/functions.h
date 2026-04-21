@@ -1,4 +1,4 @@
-//functions header file for ioPortsRelayProj V1.0
+//functions header file for ioPortsRelayProj V0.2
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 
@@ -25,4 +25,8 @@ void correct_code(void);
 // What happens if code is wrong
 void wrong_code(void);
 
+//emergency switch buzz
+void emergency_buzz(void);
+
 #endif
+
