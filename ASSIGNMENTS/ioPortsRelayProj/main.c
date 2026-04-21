@@ -7,7 +7,7 @@
  * seven segment display.
  *
  * Inputs: RB1 for PR1_PORT, RB2 for PR2_PORT, RB6 for CHECK_PORT, RB0 for EMG_PORT
- * Outputs: PORTD for DISPLAY_LED, RB3 for 
+ * Outputs: PORTD for DISPLAY_LED, RB3 for SYS_LED_LAT, RB4 for MOTOR_LAT, RB5 for BUZZER_LAT
  * 
  * Versions:
  * V0.1 (4/15/26)[No header files yet, and no functions, just body of main]
