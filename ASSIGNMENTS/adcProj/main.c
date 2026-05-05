@@ -18,6 +18,11 @@
  *
  * Author:
  *   Maxim
+ *
+ * Version:
+ * V1 (switches between  sound levels too quickly
+ * V2 (previous problem fixed)
+ *
  */
 #include <xc.h>
 #include <stdint.h>
@@ -227,20 +232,23 @@ void main(void)
 
             LCD_SetCursor(2, 0);
             LCD_Print(data);
+            __delay_ms(2000);
         }
-        if (voltage <= 0.19) {
+        else if (voltage <= 0.19) {
             LCD_SetCursor(1, 0);
             LCD_Print("Sound: Normal");
 
             LCD_SetCursor(2, 0);
             LCD_Print(data);
+            __delay_ms(2000);
         }
-        if (voltage <= 0.23) {
+        else if (voltage <= 0.23) {
             LCD_SetCursor(1, 0);
             LCD_Print("Sound: Loud");
 
             LCD_SetCursor(2, 0);
             LCD_Print(data);
+            __delay_ms(2000);
         }
         else{
             LCD_SetCursor(1, 0);
@@ -248,6 +256,7 @@ void main(void)
 
             LCD_SetCursor(2, 0);
             LCD_Print(data);
+            __delay_ms(2000);
         }
         
         /*
