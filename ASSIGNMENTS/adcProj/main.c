@@ -18,11 +18,12 @@
  *
  * Author:
  *   Maxim
- *
+ * 
  * Version:
- * V1 (switches between  sound levels too quickly
- * V2 (previous problem fixed)
- *
+ * V1 (too little delay between checks)
+ * V2 (too wide a voltage range)
+ * V3 (working version)
+ * V4 (actual working version, more accurate sampling)
  */
 #include <xc.h>
 #include <stdint.h>
@@ -73,10 +74,16 @@
 #define LCD_D5 LATDbits.LATD5
 #define LCD_D6 LATDbits.LATD6
 #define LCD_D7 LATDbits.LATD7
-#define Vref 3.3 // voltage reference 
+#define Vref 5 // voltage reference 
 int digital; // holds the digital value 
-float voltage; // hold the analog value (volt))
+float voltage1; // hold the analog value (volt))
+float voltage2;
+float voltage3;
+float voltage4;
+float voltage5;
+float vfinal;
 char data[10];
+
 
 
 void ADC_Init(void);
@@ -219,36 +226,75 @@ void main(void)
         
         digital = (ADRESH*256) | (ADRESL);/*Combine 8-bit LSB and 2-bit MSB*/
         // DO: define voltage = Vref/4096 (note that voltage is float type
-        voltage = digital*((float)Vref/(float)4096);
+        voltage1 = digital*((float)Vref/(float)4096);
+        
+        ADCON0bits.GO = 1;
+        
+        while (ADCON0bits.GO); //Wait for conversion done
+        
+        digital = (ADRESH*256) | (ADRESL);/*Combine 8-bit LSB and 2-bit MSB*/
+        // DO: define voltage = Vref/4096 (note that voltage is float type
+        voltage2 = digital*((float)Vref/(float)4096);
+        
+        ADCON0bits.GO = 1;
+        
+        while (ADCON0bits.GO); //Wait for conversion done
+        
+        digital = (ADRESH*256) | (ADRESL);/*Combine 8-bit LSB and 2-bit MSB*/
+        // DO: define voltage = Vref/4096 (note that voltage is float type
+        voltage3 = digital*((float)Vref/(float)4096);
+        
+        ADCON0bits.GO = 1;
+        
+        while (ADCON0bits.GO); //Wait for conversion done
+        
+        digital = (ADRESH*256) | (ADRESL);/*Combine 8-bit LSB and 2-bit MSB*/
+        // DO: define voltage = Vref/4096 (note that voltage is float type
+        voltage4 = digital*((float)Vref/(float)4096);
+        
+        ADCON0bits.GO = 1;
+        
+        while (ADCON0bits.GO); //Wait for conversion done
+        
+        digital = (ADRESH*256) | (ADRESL);/*Combine 8-bit LSB and 2-bit MSB*/
+        // DO: define voltage = Vref/4096 (note that voltage is float type
+        voltage5 = digital*((float)Vref/(float)4096);
+        
+        vfinal = (voltage1 + voltage2 + voltage3 + voltage4 + voltage5) / 5;
         
         /*This is used to convert integer value to ASCII string*/
-        sprintf(data,"%.4f",voltage);
-        strcat(data,"V Sound Level");	/*Concatenate result and unit to print*/
+        sprintf(data,"%.4f",vfinal);
+        strcat(data,"V Sound Lv");	/*Concatenate result and unit to print*/
         
+        LCD_SetCursor(1, 0);
+        LCD_Print("");
+
+        LCD_SetCursor(2, 0);
+        LCD_Print("");
         
-        if (voltage <= 0.13) {
+        if (vfinal <= 0.1999) {
             LCD_SetCursor(1, 0);
-            LCD_Print("Sound: Quiet");
+            LCD_Print("Sound: Quiet    ");
 
             LCD_SetCursor(2, 0);
             LCD_Print(data);
-            __delay_ms(2000);
+            __delay_ms(500);
         }
-        else if (voltage <= 0.19) {
+        else if (vfinal <= 0.2006) {
             LCD_SetCursor(1, 0);
             LCD_Print("Sound: Normal");
 
             LCD_SetCursor(2, 0);
             LCD_Print(data);
-            __delay_ms(2000);
+            __delay_ms(500);
         }
-        else if (voltage <= 0.23) {
+        else if (vfinal <= 0.201) {
             LCD_SetCursor(1, 0);
-            LCD_Print("Sound: Loud");
+            LCD_Print("Sound: Loud     ");
 
             LCD_SetCursor(2, 0);
             LCD_Print(data);
-            __delay_ms(2000);
+            __delay_ms(500);
         }
         else{
             LCD_SetCursor(1, 0);
@@ -256,7 +302,7 @@ void main(void)
 
             LCD_SetCursor(2, 0);
             LCD_Print(data);
-            __delay_ms(2000);
+            __delay_ms(500);
         }
         
         /*
