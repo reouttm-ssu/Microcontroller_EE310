@@ -8,14 +8,14 @@
  * must match or remember voltage values within a timed game sequence.
  *
  * Inputs:
- * - Analog voltage input (ADC)
+ * - Analog voltage input (ADC) (RA0)
  * - Push button input (RB5 / CHECK_BUTTON)
  * - Timer0 interrupt events
  * - Internal clock oscillator
  *
  * Outputs:
- * - LCD display messages and game information
- * - PWM signal output
+ * - LCD display messages and game information (PORTD 0-1, 4-7)
+ * - PWM signal output (RB3)
  * - Calculated voltage readings
  * - Score and game result display
  *
